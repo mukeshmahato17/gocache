@@ -1,39 +1,48 @@
 package main
 
-// import (
-// 	"flag"
-// 	"log"
-// 	"net"
+import (
+	"flag"
+	"log"
+	"net"
+	"time"
 
-// 	"github.com/mukeshmahato17/gocache/cache"
-// )
+	"github.com/mukeshmahato17/gocache/cache"
+)
 
-// func main() {
-// 	conn, err := net.Dial("tcp", ":3000")
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+func main() {
 
-// 	_, err = conn.Write([]byte("SET Foo Bar 40000"))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
+	var (
+		listenAddr = flag.String("listenaddr", ":3000", "listen address of the server")
+		leaderAddr = flag.String("leaderaddr", "", "listen address of the leader")
+	)
+	flag.Parse()
 
-// 	select {}
+	opts := ServerOpts{
+		ListenAddr: *listenAddr,
+		IsLeader:   len(*leaderAddr) == 0,
+		LeaderAddr: *leaderAddr,
+	}
 
-// 	return
-// 	var (
-// 		listenAddr = flag.String("listenaddr", ":3000", "listen address of the server")
-// 		leaderAddr = flag.String("leaderaddr", "", "listen address of the leader")
-// 	)
-// 	flag.Parse()
+	go func() {
+		time.Sleep(time.Second * 2)
+		SendCommand()
+	}()
 
-// 	opts := ServerOpts{
-// 		ListenAddr: *listenAddr,
-// 		IsLeader:   len(*leaderAddr) == 0,
-// 		LeaderAddr: *leaderAddr,
-// 	}
+	server := NewServer(opts, cache.New())
+	server.Start()
+}
 
-// 	server := NewServer(opts, cache.New())
-// 	server.Start()
-// }
+func SendCommand() {
+	cmd := &CommandSet{
+		Key:   []byte("Foo"),
+		Value: []byte("Bar"),
+		TTL:   2,
+	}
+
+	conn, err := net.Dial("tcp", ":3000")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	conn.Write(cmd.Bytes())
+}

@@ -2,8 +2,9 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseSetCommand(t *testing.T) {
@@ -12,9 +13,37 @@ func TestParseSetCommand(t *testing.T) {
 		Value: []byte("Bar"),
 		TTL:   2,
 	}
-	fmt.Println(cmd.Bytes())
 
 	r := bytes.NewReader(cmd.Bytes())
 
-	ParseCommand(r)
+	pcmd := ParseCommand(r)
+
+	assert.Equal(t, cmd, pcmd)
+}
+
+func TestParseGetCommand(t *testing.T) {
+	cmd := &CommandGet{
+		Key: []byte("Foo"),
+	}
+
+	r := bytes.NewReader(cmd.Bytes())
+
+	pcmd := ParseCommand(r)
+
+	assert.Equal(t, cmd, pcmd)
+}
+
+func BenchmarkParseCommand(b *testing.B) {
+	cmd := &CommandSet{
+		Key:   []byte("Foo"),
+		Value: []byte("Bar"),
+		TTL:   2,
+	}
+
+	for i := 0; i < b.N; i++ {
+
+		r := bytes.NewReader(cmd.Bytes())
+
+		ParseCommand(r)
+	}
 }
