@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"github.com/mukeshmahato17/gocache/cache"
 )
@@ -47,21 +48,28 @@ func (s *Server) Start() error {
 
 func (s *Server) handleConn(conn net.Conn) {
 	defer conn.Close()
-	buf := make([]byte, 2048)
+	// buf := make([]byte, 2048)
 
 	fmt.Println("connection made:", conn.RemoteAddr())
-
 	for {
-		n, err := conn.Read(buf)
+		cmd, err := ParseCommand(conn)
 		if err != nil {
-			log.Printf("conn read error: %s\n", err)
-			break
+			log.Println("invalid command error ", err)
 		}
-
-		go s.handleCommand(conn, buf[:n])
+		go s.handleCommand(conn, cmd)
 	}
 }
 
-func (s *Server) handleCommand(conn net.Conn, rawCmd []byte) {
-	fmt.Println(rawCmd)
+func (s *Server) handleCommand(conn net.Conn, cmd any) {
+	switch v := cmd.(type) {
+	case *CommandSet:
+		s.handleSetCommand(conn, v)
+	case *CommandGet:
+	}
+}
+
+func (s *Server) handleSetCommand(conn net.Conn, cmd *CommandSet) error {
+	fmt.Printf("SET %s to %s\n", cmd.Key, cmd.Value)
+
+	return s.cache.Set(cmd.Key, cmd.Value, time.Duration(cmd.TTL))
 }

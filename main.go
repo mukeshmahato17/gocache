@@ -25,7 +25,10 @@ func main() {
 
 	go func() {
 		time.Sleep(time.Second * 2)
-		SendCommand()
+		for i := 0; i < 10; i++ {
+			SendCommand()
+			time.Sleep(time.Millisecond * 200)
+		}
 	}()
 
 	server := NewServer(opts, cache.New())
