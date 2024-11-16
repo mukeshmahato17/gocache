@@ -16,7 +16,8 @@ func TestParseSetCommand(t *testing.T) {
 
 	r := bytes.NewReader(cmd.Bytes())
 
-	pcmd := ParseCommand(r)
+	pcmd, err := ParseCommand(r)
+	assert.Nil(t, err)
 
 	assert.Equal(t, cmd, pcmd)
 }
@@ -28,7 +29,8 @@ func TestParseGetCommand(t *testing.T) {
 
 	r := bytes.NewReader(cmd.Bytes())
 
-	pcmd := ParseCommand(r)
+	pcmd, err := ParseCommand(r)
+	assert.Nil(t, err)
 
 	assert.Equal(t, cmd, pcmd)
 }

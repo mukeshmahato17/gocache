@@ -39,7 +39,7 @@ func SendCommand() {
 	cmd := &CommandSet{
 		Key:   []byte("Foo"),
 		Value: []byte("Bar"),
-		TTL:   2,
+		TTL:   0,
 	}
 
 	conn, err := net.Dial("tcp", ":3000")
