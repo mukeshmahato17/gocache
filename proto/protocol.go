@@ -1,4 +1,4 @@
-package main
+package proto
 
 import (
 	"bytes"
@@ -56,7 +56,9 @@ func (c *CommandGet) Bytes() []byte {
 
 func ParseCommand(r io.Reader) (any, error) {
 	var cmd Command
-	binary.Read(r, binary.LittleEndian, &cmd)
+	if err := binary.Read(r, binary.LittleEndian, &cmd); err != nil {
+		return nil, err
+	}
 
 	switch cmd {
 	case CmdSet:

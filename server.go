@@ -2,11 +2,13 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"time"
 
 	"github.com/mukeshmahato17/gocache/cache"
+	"github.com/mukeshmahato17/gocache/proto"
 )
 
 type ServerOpts struct {
@@ -52,23 +54,29 @@ func (s *Server) handleConn(conn net.Conn) {
 
 	fmt.Println("connection made:", conn.RemoteAddr())
 	for {
-		cmd, err := ParseCommand(conn)
+		cmd, err := proto.ParseCommand(conn)
 		if err != nil {
+			if err == io.EOF {
+				break
+			}
 			log.Println("invalid command error ", err)
+			break
 		}
 		go s.handleCommand(conn, cmd)
 	}
+
+	fmt.Println("connection closed: ", conn.RemoteAddr())
 }
 
 func (s *Server) handleCommand(conn net.Conn, cmd any) {
 	switch v := cmd.(type) {
-	case *CommandSet:
+	case *proto.CommandSet:
 		s.handleSetCommand(conn, v)
-	case *CommandGet:
+	case *proto.CommandGet:
 	}
 }
 
-func (s *Server) handleSetCommand(conn net.Conn, cmd *CommandSet) error {
+func (s *Server) handleSetCommand(conn net.Conn, cmd *proto.CommandSet) error {
 	fmt.Printf("SET %s to %s\n", cmd.Key, cmd.Value)
 
 	return s.cache.Set(cmd.Key, cmd.Value, time.Duration(cmd.TTL))

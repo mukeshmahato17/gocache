@@ -1,12 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"log"
-	"net"
 	"time"
 
 	"github.com/mukeshmahato17/gocache/cache"
+	"github.com/mukeshmahato17/gocache/client"
 )
 
 func main() {
@@ -25,27 +26,26 @@ func main() {
 
 	go func() {
 		time.Sleep(time.Second * 2)
-		for i := 0; i < 10; i++ {
-			SendCommand()
-			time.Sleep(time.Millisecond * 200)
+		client, err := client.New(":3000", client.Options{})
+		if err != nil {
+			log.Fatal(err)
 		}
+
+		for i := 0; i < 10; i++ {
+			SendCommand(client)
+		}
+		client.Close()
+		time.Sleep(time.Second * 1)
 	}()
 
 	server := NewServer(opts, cache.New())
 	server.Start()
 }
 
-func SendCommand() {
-	cmd := &CommandSet{
-		Key:   []byte("Foo"),
-		Value: []byte("Bar"),
-		TTL:   0,
-	}
-
-	conn, err := net.Dial("tcp", ":3000")
+func SendCommand(client *client.Client) {
+	_, err := client.Set(context.Background(), []byte("Foo"), []byte("Bar"), 0)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	conn.Write(cmd.Bytes())
 }
